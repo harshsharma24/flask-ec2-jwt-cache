@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 import time
+from redis_helper import get_product_redis
 
 
 app = Flask(__name__)
@@ -86,6 +87,12 @@ def get_product(product_id):
     else:
         return None
     
+@app.route('/redis/products/<product_id>', methods = ['GET'])
+def get_product_details_redis(product_id) :
+    product, source=  get_product_redis(product_id)
+    if product:
+        return jsonify({"product": product, "source" : source}),200
+    return jsonify({"error": "product not found"}),404
 
 
 
