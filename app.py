@@ -17,8 +17,10 @@ jwt = JWTManager(app)
 
 # Dummy user data
 users = {
-    "admin": {"password": "password123"}
+    "user1": {"password": "password1", "role": "user"},
+    "user2": {"password": "adminpass", "role": "admin"}
 }
+
 
 load_dotenv()
 
@@ -34,7 +36,7 @@ def login():
     if username not in users or users[username]['password'] != password:
         return jsonify ({"msg" : "Bad Username or password"}), 401
 
-    access_token = create_access_token(identity=username)
+    access_token = create_access_token(identity={"username":username,"role":users[username]["role"]})
     return jsonify(access_token=access_token)
 
 @app.route('/protected', methods=['GET'])
@@ -42,6 +44,15 @@ def login():
 def protected():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
+
+@app.route('/admin', methods=['GET'])
+@jwt_required()
+def admin_route():
+    current_user = get_jwt_identity()
+    if current_user['role'] != 'admin':
+        return jsonify({"error": "Admins only!"}),403
+    return jsonify({"message": "Welcome to the admin route!"}),200
+
 
 @app.route('/products/<product_id>', methods=['GET'])
 def get_product_details(product_id):
